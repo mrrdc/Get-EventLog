@@ -1,28 +1,28 @@
-#Serverliste einlesen
-$serverlist = Get-Content $PathToServerlist
-#Datumsvariablen festlegen
+#Read Serverlist
+$serverlist = Get-Content $PathToServerlist #PathToServerlist currently undefined
+#Date declaration
 $date = Get-Date
 $DatetoDelete = $date.AddDays(-30)
 $strDate = $date.ToString("yyyy-MM-dd")
-#Legt fest, welche Logs überprüft werden
+#Logs analysed
 $logs = "System", "Application"
-#Anzahl der zu prüfenden Einträge
+#Number of elements
 $elements = 250
-#Log-Datei erstellen
-$file = New-Item $PathToLogDir\$strDate.log -type File -force
-#SMTP Server festlegen
-$smtp = New-Object Net.Mail.SmtpClient($mailserver)
+#Create log file
+$file = New-Item $PathToLogDir\$strDate.log -type File -force #PathToLogDir currently undefined
+#Define SMTP Server
+$smtp = New-Object Net.Mail.SmtpClient($mailserver) #Mailserver currently undefined
 $message = ""
 
 
 ForEach ($servername in $serverlist) {
-    #Wenn Maschine online...
+    #Check if machine is online
     If (Test-Connection -Count 1 -ComputerName $servername -Quiet) {
                     
         Add-content $file "--------------------------"
         Add-content $file "Ereignisauswertung: $servername"
         Add-content $file "--------------------------"
-        # Zählen wie viele Fehler, Warnung und Informationen vorkommen
+        # Count events (information, warning, error)
         ForEach ($log in $logs) {            
             $events = Get-EventLog -log $log -newest $elements -computername $servername
             $inf_count = 0
@@ -40,7 +40,7 @@ ForEach ($servername in $serverlist) {
             If ($err_count -gt 42) {
                 $message = $message + "Vorsicht bei $servername, mehr als $err_count Fehler.`n"
             }
-            #Ergebnisse in Log-Datei speichern
+            #Write to log file
             Add-content $file "Log: $log"
             Add-content $file "Fehler:`t`t`t$err_count"
             Add-content $file "Warnungen:`t`t$warn_count"
@@ -55,7 +55,7 @@ ForEach ($servername in $serverlist) {
     }
 }
 If ($message -ne "") {
-    $smtp.Send($sender,$recipient,"Eventlog",$message)
+    $smtp.Send($sender,$recipient,$Title,$message) #Sender, Recipient, Title currently undefined
 }
-#Alte Log-Dateien löschen
+#Remove old log files
 Get-ChildItem $PathToLogDir | Where-Object { $_.LastWriteTime -lt $DatetoDelete } | Remove-Item
