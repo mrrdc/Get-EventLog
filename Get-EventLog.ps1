@@ -1,5 +1,5 @@
 #Serverliste einlesen
-$serverlist = Get-Content "\\srvfile\neuland\Abteilung\EDV\Kontrollen\Tägliche Kontrolle\Serverliste\- serverliste.txt"
+$serverlist = Get-Content $PathToServerlist
 #Datumsvariablen festlegen
 $date = Get-Date
 $DatetoDelete = $date.AddDays(-30)
@@ -9,9 +9,9 @@ $logs = "System", "Application"
 #Anzahl der zu prüfenden Einträge
 $elements = 250
 #Log-Datei erstellen
-$file = New-Item "\\srvfile\neuland\Abteilung\EDV\Kontrollen\Tägliche Kontrolle\Eventlogs\$strDate-Events.log" -type File -force
+$file = New-Item $PathToLogDir\$strDate.log -type File -force
 #SMTP Server festlegen
-$smtp = New-Object Net.Mail.SmtpClient("exchange.neuland.com")
+$smtp = New-Object Net.Mail.SmtpClient($mailserver)
 $message = ""
 
 
@@ -55,7 +55,7 @@ ForEach ($servername in $serverlist) {
     }
 }
 If ($message -ne "") {
-    $smtp.Send("Eventlog@neuland.com","sma@neuland.com","Eventlog",$message)
+    $smtp.Send($sender,$recipient,"Eventlog",$message)
 }
 #Alte Log-Dateien löschen
-Get-ChildItem "\\srvfile\neuland\Abteilung\EDV\Kontrollen\Tägliche Kontrolle\Eventlogs\" | Where-Object { $_.LastWriteTime -lt $DatetoDelete } | Remove-Item
+Get-ChildItem $PathToLogDir | Where-Object { $_.LastWriteTime -lt $DatetoDelete } | Remove-Item
